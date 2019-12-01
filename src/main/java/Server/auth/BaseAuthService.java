@@ -1,4 +1,9 @@
 package Server.auth;
+
+import Server.ClientHandler;
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.*;
 
 public class BaseAuthService implements AuthService {
@@ -28,9 +33,15 @@ public class BaseAuthService implements AuthService {
     }
 
     private static void connection() throws ClassNotFoundException, SQLException {
-        Class.forName("org.sqlite.JDBC");
-        conn = DriverManager.getConnection("jdbc:sqlite::resource:LoginData.db");
-        stmt = conn.createStatement();
+        try {
+            URI uri = BaseAuthService.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+            String pathToDB = new File(uri).getParent() + "\\LoginData.db";
+            Class.forName("org.sqlite.JDBC");
+            conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
+            stmt = conn.createStatement();
+        } catch (URISyntaxException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public static void disconect() throws SQLException {
@@ -41,6 +52,7 @@ public class BaseAuthService implements AuthService {
     @Override
     public void start() {
         System.out.println("Сервис авторизации запущен!");
+        ClientHandler.logger.info("Сервис авторизации запущен!");
     }
 
     @Override

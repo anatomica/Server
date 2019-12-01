@@ -2,14 +2,19 @@ package Server;
 
 import Server.auth.BaseAuthService;
 import Server.gson.*;
-
+import org.apache.log4j.Logger;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-class ClientHandler {
+public class ClientHandler {
 
     private MyServer myServer;
     private String clientName;
@@ -19,6 +24,7 @@ class ClientHandler {
     private ChangeNick changeNick;
     private static Connection conn;
     private static Statement stmt;
+    public static Logger logger = Logger.getLogger("file");
 
     ClientHandler(Socket socket, MyServer myServer) {
         try {
@@ -27,7 +33,8 @@ class ClientHandler {
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
 
-            new Thread(() -> {
+            ExecutorService exSer = Executors.newCachedThreadPool();
+            exSer.submit(() -> {
                 try {
                     while (true) {
                         if (authentication()) {
@@ -40,8 +47,9 @@ class ClientHandler {
                 } finally {
                     closeConnection();
                 }
-            }).start();
+            });
         } catch (IOException e) {
+            logger.info("Ошибка создания подключения к клиенту!", e);
             throw new RuntimeException("Ошибка создания подключения к клиенту!", e);
         }
     }
@@ -49,6 +57,7 @@ class ClientHandler {
     private void readMessages() throws IOException, SQLException {
         while (true) {
             String clientMessage = in.readUTF();
+            logger.info(String.format("Сообщение/команда: '%s' от клиента: %s%n", clientMessage, clientName));
             System.out.printf("Сообщение: '%s' от клиента: %s%n", clientMessage, clientName);
             Message m = Message.fromJson(clientMessage);
             switch (m.command) {
@@ -108,6 +117,7 @@ class ClientHandler {
             clientName = nick;
             myServer.broadcastMessage(clientName + " онлайн!");
             myServer.subscribe(this);
+            logger.info("Подключился клиент: " + clientName);
         }
         return true;
     }
@@ -139,9 +149,15 @@ class ClientHandler {
     }
 
     private static void connection() throws ClassNotFoundException, SQLException {
-        Class.forName("org.sqlite.JDBC");
-        conn = DriverManager.getConnection("jdbc:sqlite::resource:LoginData.db");
-        stmt = conn.createStatement();
+        try {
+            URI uri = BaseAuthService.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+            String pathToDB = new File(uri).getParent() + "\\LoginData.db";
+            Class.forName("org.sqlite.JDBC");
+            conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
+            stmt = conn.createStatement();
+        } catch (URISyntaxException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private static void disconect() throws SQLException {
