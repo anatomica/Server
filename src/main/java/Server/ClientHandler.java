@@ -22,6 +22,7 @@ public class ClientHandler {
     private DataInputStream in;
     private DataOutputStream out;
     private ChangeNick changeNick;
+    private RegisterMessage registerMessage;
     private static Connection conn;
     private static Statement stmt;
     public static Logger logger = Logger.getLogger("file");
@@ -82,6 +83,25 @@ public class ClientHandler {
                     }
                     disconect();
                     break;
+                case REGISTER_MESSAGE:
+                    registerMessage = m.registerMessage;
+
+                    try {
+                        connection();
+                    }  catch (SQLException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (verifyNick()) {
+                        stmt.executeUpdate(String.format("INSERT INTO LoginData (Login, Pass, Nick) VALUES ('%s', '%s','%s')",
+                                registerMessage.login, registerMessage.password, registerMessage.nickname));
+                        myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
+                        myServer.subscribe(this);
+                    } else {
+                        sendMessage("Данный Ник занят! \nПожалуйста, выберите другой Ник!");
+                    }
+                    disconect();
+                    break;
                 case PUBLIC_MESSAGE:
                     PublicMessage publicMessage = m.publicMessage;
                     myServer.broadcastMessage(publicMessage.from + ": " + publicMessage.message, this);
@@ -127,7 +147,8 @@ public class ClientHandler {
         while (rs.next()) {
             ResultSetMetaData dataInBase = rs.getMetaData();
             for (int i = 1; i <= dataInBase.getColumnCount(); i++) {
-                if (rs.getString("Nick").equals(changeNick.nick)) {
+//                if (rs.getString("Nick").equals(changeNick.nick)) {
+                if (rs.getString("Nick").equals(registerMessage.nickname)) {
                     return false;
                 }
             }
@@ -151,7 +172,7 @@ public class ClientHandler {
     private static void connection() throws ClassNotFoundException, SQLException {
         try {
             URI uri = BaseAuthService.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-            String pathToDB = new File(uri).getParent() + "\\LoginData.db";
+            String pathToDB = new File(uri).getParent() + BaseAuthService.pathInLinux;
             Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
             stmt = conn.createStatement();

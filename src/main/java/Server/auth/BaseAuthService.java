@@ -10,6 +10,8 @@ public class BaseAuthService implements AuthService {
 
     private static Connection conn;
     private static Statement stmt;
+    public static String pathInWin = "\\LoginData.db";
+    public static String pathInLinux = "/LoginData.db";
 
     @Override
     public String getNickByLoginPass(String login, String pass) throws SQLException {
@@ -35,7 +37,7 @@ public class BaseAuthService implements AuthService {
     private static void connection() throws ClassNotFoundException, SQLException {
         try {
             URI uri = BaseAuthService.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-            String pathToDB = new File(uri).getParent() + "\\LoginData.db";
+            String pathToDB = new File(uri).getParent() + pathInLinux;
             Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
             stmt = conn.createStatement();

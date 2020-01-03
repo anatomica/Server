@@ -1,17 +1,17 @@
 package Server.gson;
 
 import com.google.gson.Gson;
-
 import java.util.List;
 
 public class Message {
 
-    public Command command;
-    public PrivateMessage privateMessage;
-    public AuthMessage authMessage;
-    public PublicMessage publicMessage;
     public ClientListMessage clientListMessage;
+    public RegisterMessage registerMessage;
+    public PrivateMessage privateMessage;
+    public PublicMessage publicMessage;
+    public AuthMessage authMessage;
     public ChangeNick changeNick;
+    public Command command;
 
     public static Message createClientList(List<String> nicknames) {
         Message message = create(Command.CLIENT_LIST);
@@ -50,6 +50,12 @@ public class Message {
     public static Message createNick(ChangeNick msg) {
         Message m = create(Command.CHANGE_NICK);
         m.changeNick = msg;
+        return m;
+    }
+
+    public static Message createRegister(RegisterMessage msg) {
+        Message m = create(Command.REGISTER_MESSAGE);
+        m.registerMessage = msg;
         return m;
     }
 
