@@ -96,6 +96,7 @@ public class ClientHandler {
                         stmt.executeUpdate(String.format("INSERT INTO LoginData (Login, Pass, Nick) VALUES ('%s', '%s','%s')",
                                 registerMessage.login, registerMessage.password, registerMessage.nickname));
                         myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
+                        sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
                         myServer.subscribe(this);
                     } else {
                         sendMessage("Данный Ник занят! \nПожалуйста, выберите другой Ник!");
