@@ -92,14 +92,14 @@ public class ClientHandler {
                         e.printStackTrace();
                     }
 
-                    if (verifyNick()) {
+                    if (verifyLogin()) {
                         stmt.executeUpdate(String.format("INSERT INTO LoginData (Login, Pass, Nick) VALUES ('%s', '%s','%s')",
                                 registerMessage.login, registerMessage.password, registerMessage.nickname));
                         myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
                         sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
                         myServer.subscribe(this);
                     } else {
-                        sendMessage("Данный Ник занят! \nПожалуйста, выберите другой Ник!");
+                        sendMessage("Данный Логин занят! \nПожалуйста, выберите другой Логин!");
                     }
                     disconect();
                     break;
@@ -148,8 +148,21 @@ public class ClientHandler {
         while (rs.next()) {
             ResultSetMetaData dataInBase = rs.getMetaData();
             for (int i = 1; i <= dataInBase.getColumnCount(); i++) {
+                if (rs.getString("Nick").equals(changeNick.nick)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean verifyLogin() throws SQLException {
+        ResultSet rs = stmt.executeQuery("select * from LoginData");
+        while (rs.next()) {
+            ResultSetMetaData dataInBase = rs.getMetaData();
+            for (int i = 1; i <= dataInBase.getColumnCount(); i++) {
 //                if (rs.getString("Nick").equals(changeNick.nick)) {
-                if (rs.getString("Nick").equals(registerMessage.nickname)) {
+                if (rs.getString("Login").equals(registerMessage.login)) {
                     return false;
                 }
             }
