@@ -81,7 +81,7 @@ public class ClientHandler {
                     } else {
                         sendMessage("Данный Ник занят! \nПожалуйста, выберите другой Ник!");
                     }
-                    disconect();
+                    disconnect();
                     break;
                 case REGISTER_MESSAGE:
                     registerMessage = m.registerMessage;
@@ -101,7 +101,7 @@ public class ClientHandler {
                     } else {
                         sendMessage("Данный Логин занят! \nПожалуйста, выберите другой Логин!");
                     }
-                    disconect();
+                    disconnect();
                     break;
                 case PUBLIC_MESSAGE:
                     PublicMessage publicMessage = m.publicMessage;
@@ -186,7 +186,7 @@ public class ClientHandler {
     private static void connection() throws ClassNotFoundException, SQLException {
         try {
             URI uri = BaseAuthService.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-            String pathToDB = new File(uri).getParent() + BaseAuthService.pathInLinux;
+            String pathToDB = new File(uri).getParent() + BaseAuthService.pathInWin;
             Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
             stmt = conn.createStatement();
@@ -195,7 +195,7 @@ public class ClientHandler {
         }
     }
 
-    private static void disconect() throws SQLException {
+    private static void disconnect() throws SQLException {
         stmt.close();
         conn.close();
     }
