@@ -25,6 +25,7 @@ public class DataMessage {
     public void addClientToList(){
         try {
             connection();
+            allClients.clear();
             ResultSet rs = stmt.executeQuery("select * from LoginData");
             while (rs.next()) {
                 allClients.add(rs.getString("Nick"));
@@ -49,6 +50,15 @@ public class DataMessage {
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(nameClient + ".txt", true), "UTF-8"))) {
             bw.write(messageText + "\n");
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void cleanFile(String nameClient) {
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(nameClient + ".txt", false), "UTF-8"))) {
+            bw.write("");
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }

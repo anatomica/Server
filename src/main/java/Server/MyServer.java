@@ -27,7 +27,7 @@ class MyServer {
         // dataMessage = new DataMessage();
         System.out.println("Сервер запущен!");
         try {
-            dataMessage.addClientToList();
+            // dataMessage.addClientToList();
             serverSocket = new ServerSocket(PORT);
             authService.start();
             while (true) {
@@ -64,13 +64,16 @@ class MyServer {
             BufferedReader br = new BufferedReader(new InputStreamReader(
                     new FileInputStream(clientHandler.getClientName() + ".txt"), "UTF-8"));
             String tmp;
-//            byte[] buf = new byte[br.read()];
-//            if (buf.length > 0) {
-                privateMessage("Новые сообщения:", clientHandler.getClientName(), clientHandler);
-                while ((tmp = br.readLine()) != null) {
-                    privateMessage(tmp, clientHandler.getClientName(), clientHandler);
+            int count = 0;
+            while ((tmp = br.readLine()) != null) {
+                if (count == 0) {
+                    privateMessage("Новые сообщения:", clientHandler.getClientName(), clientHandler);
+                    count++;
                 }
-//            }
+                privateMessage(tmp, clientHandler.getClientName(), clientHandler);
+                System.out.println("From: " + clientHandler + " To: " + clientHandler.getClientName() + " Message: " + tmp);
+            }
+            dataMessage.cleanFile(clientHandler.getClientName());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -109,12 +112,13 @@ class MyServer {
         List<ClientHandler> unfiltered = Arrays.asList(unfilteredClients);
         List<String> filteredClients = dataMessage.allClients;
         for (ClientHandler client : clients) {
+            filteredClients.remove(client.getClientName());
             if (!unfiltered.contains(client)) {
                 client.sendMessage(message);
-                filteredClients.remove(client.getClientName());
             }
         }
         dataMessage.writeMessageToFile(filteredClients, message);
+        dataMessage.addClientToList();
     }
 
     synchronized void privateMessage(String message, String nick, ClientHandler sender) {
