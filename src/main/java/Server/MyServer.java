@@ -37,7 +37,7 @@ class MyServer {
                 System.out.println("Ожидание подключения клиентов ...");
                 Socket socket = serverSocket.accept();
                 System.out.println("Клиент подключен!");
-                new ClientHandler(socket, this);
+                new ClientHandler(socket, this, dataMessage);
             }
         } catch (IOException e) {
             System.err.println("Ошибка в работе сервера. Причина: " + e.getMessage());

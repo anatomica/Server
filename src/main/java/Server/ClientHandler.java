@@ -3,10 +3,8 @@ package Server;
 import Server.auth.BaseAuthService;
 import Server.gson.*;
 import org.apache.log4j.Logger;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
+
+import java.io.*;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -16,6 +14,7 @@ import java.util.concurrent.Executors;
 
 public class ClientHandler {
 
+    private DataMessage dataMessage;
     private MyServer myServer;
     private String clientName;
     private Socket socket;
@@ -27,10 +26,11 @@ public class ClientHandler {
     private static Statement stmt;
     public static Logger logger = Logger.getLogger("file");
 
-    ClientHandler(Socket socket, MyServer myServer) {
+    ClientHandler(Socket socket, MyServer myServer, DataMessage dataMessage) {
         try {
             this.socket = socket;
             this.myServer = myServer;
+            this.dataMessage = dataMessage;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
 
@@ -92,12 +92,14 @@ public class ClientHandler {
                         e.printStackTrace();
                     }
 
-                    if (verifyLogin()) {
+                    if (verifyLogin() && verifyNick()) {
                         stmt.executeUpdate(String.format("INSERT INTO LoginData (Login, Pass, Nick) VALUES ('%s', '%s','%s')",
                                 registerMessage.login, registerMessage.password, registerMessage.nickname));
                         myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
                         sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
                         myServer.subscribe(this);
+                        dataMessage.addClientToList();
+                        dataMessage.checkMessageFileOnStart();
                     } else {
                         sendMessage("Данный Логин занят! \nПожалуйста, выберите другой Логин!");
                     }
@@ -148,7 +150,8 @@ public class ClientHandler {
         while (rs.next()) {
             ResultSetMetaData dataInBase = rs.getMetaData();
             for (int i = 1; i <= dataInBase.getColumnCount(); i++) {
-                if (rs.getString("Nick").equals(changeNick.nick)) {
+//                if (rs.getString("Nick").equals(changeNick.nick)) {
+                if (rs.getString("Nick").equals(registerMessage.nickname)) {
                     return false;
                 }
             }
