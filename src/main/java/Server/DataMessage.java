@@ -16,10 +16,26 @@ public class DataMessage {
     private static Connection conn;
     private static Statement stmt;
     public List<String> allClients = new ArrayList<>();
+    public String pathToHistory;
+    public File fileHistory;
+    public String pathToHistoryWIN;
+    public String pathToHistoryLINUX;
 
     public DataMessage () {
         // this.clientHandler = clientHandler;
         // this.myServer = myServer;
+    }
+
+    public void checkPath() {
+        try {
+            URI uri = ServerApp.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+            pathToHistory = new File(uri).getParent();
+            pathToHistoryWIN = pathToHistory + "\\";
+            pathToHistoryLINUX = pathToHistory + "/";
+            System.out.println(pathToHistory);
+        } catch (URISyntaxException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public void addClientToList(){
@@ -36,6 +52,12 @@ public class DataMessage {
         }
     }
 
+    public void checkMessageFileOnStart() {
+        for (int i = 0; i < allClients.size(); i++) {
+            createFile(allClients.get(i));
+        }
+    }
+
     public void writeMessageToFile(List<String> filteredClients, String message) {
         System.out.println(filteredClients + " " + message);
         for (String filteredClient : filteredClients) {
@@ -47,9 +69,20 @@ public class DataMessage {
     }
 
     private void writeToFile(String nameClient, String messageText) {
+        createFile(nameClient);
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(nameClient + ".txt", true), "UTF-8"))) {
+                new FileOutputStream(fileHistory, true), "UTF-8"))) {
             bw.write(messageText + "\n");
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void createFile(String nameClient) {
+        try {
+            fileHistory = new File(pathToHistoryWIN + nickToID(nameClient) + ".txt");
+            if (fileHistory.createNewFile()) System.out.println("Файл истории " + nameClient + " номер: " + nickToID(nameClient) + " создан!");
+            else System.out.println("Файл истории " + nameClient + " номер: " + nickToID(nameClient) + " ранее создан и найден!");
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -57,11 +90,24 @@ public class DataMessage {
 
     public void cleanFile(String nameClient) {
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(nameClient + ".txt", false), "UTF-8"))) {
+                new FileOutputStream(pathToHistoryWIN + nickToID(nameClient) + ".txt", false), "UTF-8"))) {
             bw.write("");
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    public String nickToID(String nick){
+        String ID = null;
+        try {
+            connection();
+            ResultSet rs = stmt.executeQuery(String.format("SELECT id from LoginData where Nick = '%s'", nick));
+            ID = rs.getString("id");
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return ID;
     }
 
     private static void connection() throws ClassNotFoundException, SQLException {

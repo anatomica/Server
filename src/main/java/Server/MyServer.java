@@ -25,6 +25,9 @@ class MyServer {
     MyServer() {
         // this.dataMessage = dataMessage;
         // dataMessage = new DataMessage();
+        dataMessage.checkPath();
+        dataMessage.addClientToList();
+        dataMessage.checkMessageFileOnStart();
         System.out.println("Сервер запущен!");
         try {
             // dataMessage.addClientToList();
@@ -62,7 +65,8 @@ class MyServer {
     public void sendFileToClient(ClientHandler clientHandler) {
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(clientHandler.getClientName() + ".txt"), "UTF-8"));
+                    new FileInputStream(dataMessage.pathToHistoryWIN +
+                            dataMessage.nickToID(clientHandler.getClientName()) + ".txt"), "UTF-8"));
             String tmp;
             int count = 0;
             while ((tmp = br.readLine()) != null) {
@@ -71,7 +75,7 @@ class MyServer {
                     count++;
                 }
                 privateMessage(tmp, clientHandler.getClientName(), clientHandler);
-                System.out.println("From: " + clientHandler + " To: " + clientHandler.getClientName() + " Message: " + tmp);
+                System.out.println(" To: " + clientHandler.getClientName() + " Message: " + tmp);
             }
             dataMessage.cleanFile(clientHandler.getClientName());
         } catch (IOException e) {
