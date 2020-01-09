@@ -57,7 +57,8 @@ public class ClientHandler {
 
     private void readMessages() throws IOException, SQLException {
         while (true) {
-            String clientMessage = in.readUTF();
+            String clientMessage = null;
+            if (in != null) clientMessage = in.readUTF();
             logger.info(String.format("Сообщение/команда: '%s' от клиента: %s%n", clientMessage, clientName));
             System.out.printf("Сообщение: '%s' от клиента: %s%n", clientMessage, clientName);
             Message m = Message.fromJson(clientMessage);
@@ -120,14 +121,15 @@ public class ClientHandler {
     }
 
     private boolean authentication() throws IOException, SQLException {
-        String clientMessage = in.readUTF();
+        String clientMessage = null;
+        if(in != null) clientMessage = in.readUTF();
         Message message = Message.fromJson(clientMessage);
         if (message.command == Command.AUTH_MESSAGE) {
             AuthMessage authMessage = message.authMessage;
             String login = authMessage.login;
             String password = authMessage.password;
             String nick = myServer.getAuthService().getNickByLoginPass(login, password);
-            BaseAuthService.disconect();
+            BaseAuthService.disconnect();
             if (nick == null) {
                 sendMessage("Неверные логин/пароль!");
                 return false;
@@ -189,7 +191,7 @@ public class ClientHandler {
     private static void connection() throws ClassNotFoundException, SQLException {
         try {
             URI uri = BaseAuthService.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-            String pathToDB = new File(uri).getParent() + BaseAuthService.pathInWin;
+            String pathToDB = new File(uri).getParent() + BaseAuthService.pathInLinux;
             Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
             stmt = conn.createStatement();

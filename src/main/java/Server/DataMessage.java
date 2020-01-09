@@ -21,9 +21,9 @@ public class DataMessage {
     public String pathToHistoryWIN;
     public String pathToHistoryLINUX;
 
-    public DataMessage () {
+    public DataMessage (MyServer myServer) {
+        this.myServer = myServer;
         // this.clientHandler = clientHandler;
-        // this.myServer = myServer;
     }
 
     public void checkPath() {
@@ -80,7 +80,7 @@ public class DataMessage {
 
     public void createFile(String nameClient) {
         try {
-            fileHistory = new File(pathToHistoryWIN + nickToID(nameClient) + ".txt");
+            fileHistory = new File(pathToHistoryLINUX + nickToID(nameClient) + ".txt");
             if (fileHistory.createNewFile()) System.out.println("Файл истории " + nameClient + " номер: " + nickToID(nameClient) + " создан!");
             else System.out.println("Файл истории " + nameClient + " номер: " + nickToID(nameClient) + " ранее создан и найден!");
         } catch (IOException e) {
@@ -90,7 +90,7 @@ public class DataMessage {
 
     public void cleanFile(String nameClient) {
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(pathToHistoryWIN + nickToID(nameClient) + ".txt", false), "UTF-8"))) {
+                new FileOutputStream(pathToHistoryLINUX + nickToID(nameClient) + ".txt", false), "UTF-8"))) {
             bw.write("");
         } catch (IOException e) {
             System.out.println(e.getMessage());
@@ -113,7 +113,7 @@ public class DataMessage {
     private static void connection() throws ClassNotFoundException, SQLException {
         try {
             URI uri = BaseAuthService.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-            String pathToDB = new File(uri).getParent() + BaseAuthService.pathInWin;
+            String pathToDB = new File(uri).getParent() + BaseAuthService.pathInLinux;
             Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
             stmt = conn.createStatement();

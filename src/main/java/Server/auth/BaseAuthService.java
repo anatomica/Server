@@ -37,7 +37,7 @@ public class BaseAuthService implements AuthService {
     private static void connection() throws ClassNotFoundException, SQLException {
         try {
             URI uri = BaseAuthService.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-            String pathToDB = new File(uri).getParent() + pathInWin;
+            String pathToDB = new File(uri).getParent() + pathInLinux;
             Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
             stmt = conn.createStatement();
@@ -46,7 +46,7 @@ public class BaseAuthService implements AuthService {
         }
     }
 
-    public static void disconect() throws SQLException {
+    public static void disconnect() throws SQLException {
         stmt.close();
         conn.close();
     }
