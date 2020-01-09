@@ -80,11 +80,12 @@ class MyServer {
                     count++;
                 }
                 // privateMessage(tmp, clientHandler.getClientName(), clientHandler);
+                TimeUnit.MILLISECONDS.sleep(500);
                 clientHandler.sendMessage(tmp);
                 System.out.println(" To: " + clientHandler.getClientName() + " Message: " + tmp);
             }
             dataMessage.cleanFile(clientHandler.getClientName());
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
