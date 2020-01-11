@@ -14,7 +14,7 @@ public class BaseAuthService implements AuthService {
     public static String pathInLinux = "/LoginData.db";
 
     @Override
-    public String getNickByLoginPass(String login, String pass) throws SQLException {
+    public String getNickByLoginPass(String login, String pass, String token) throws SQLException {
 
         try {
             connection();
@@ -27,7 +27,9 @@ public class BaseAuthService implements AuthService {
             ResultSetMetaData dataInBase = rs.getMetaData();
             for (int i = 1; i <= dataInBase.getColumnCount(); i++) {
                 if (rs.getString("Login").equals(login) && rs.getString("Pass").equals(pass)) {
-                    return rs.getString("Nick");
+                    String nick = rs.getString("Nick");
+                    stmt.executeUpdate(String.format("UPDATE LoginData SET Token = '%s' WHERE Nick = '%s'", token, nick));
+                    return nick;
                 }
             }
         }

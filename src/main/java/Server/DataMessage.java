@@ -11,6 +11,7 @@ import java.util.List;
 
 public class DataMessage {
 
+    private static final String server_key = "AAAAbc8j05s:APA91bFtu-FuYUl2BfQ38piqy2mK4GJzPgsQp94mwbhYJFRjFBL6YRN9GFZ6tR0afwLbORmEWAlnSCkvsox3GvdJtjBfcf9AFn8YAEn8V3-tLqn9TzmlsjaLINzBAvvKXmvUSWhDnduw";
     private MyServer myServer;
     private ClientHandler clientHandler;
     private static Connection conn;
@@ -59,7 +60,8 @@ public class DataMessage {
     }
 
     public void writeMessageToFile(List<String> filteredClients, String message) {
-        System.out.println(filteredClients + " " + message);
+        if (!message.startsWith("{\"clientListMessage\":"))
+            System.out.println(filteredClients + " " + message);
         for (String filteredClient : filteredClients) {
             if (!message.endsWith("лайн!")) {
                 if (!message.startsWith("{\"clientListMessage\":"))
@@ -69,6 +71,7 @@ public class DataMessage {
     }
 
     private void writeToFile(String nameClient, String messageText) {
+        FCM.send_FCM_Notification(getToken(nameClient), server_key, messageText);
         createFile(nameClient);
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(fileHistory, true), "UTF-8"))) {
@@ -108,6 +111,19 @@ public class DataMessage {
             e.printStackTrace();
         }
         return ID;
+    }
+
+    public String getToken(String nick){
+        String token = null;
+        try {
+            connection();
+            ResultSet rs = stmt.executeQuery(String.format("SELECT Token from LoginData where Nick = '%s'", nick));
+            token = rs.getString("Token");
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return token;
     }
 
     private static void connection() throws ClassNotFoundException, SQLException {

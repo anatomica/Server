@@ -128,7 +128,8 @@ public class ClientHandler {
             AuthMessage authMessage = message.authMessage;
             String login = authMessage.login;
             String password = authMessage.password;
-            String nick = myServer.getAuthService().getNickByLoginPass(login, password);
+            String token = authMessage.token;
+            String nick = myServer.getAuthService().getNickByLoginPass(login, password, token);
             BaseAuthService.disconnect();
             if (nick == null) {
                 sendMessage("Неверные логин/пароль!");
