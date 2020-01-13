@@ -96,11 +96,12 @@ public class ClientHandler {
                     if (verifyLogin() && verifyNick()) {
                         stmt.executeUpdate(String.format("INSERT INTO LoginData (Login, Pass, Nick) VALUES ('%s', '%s','%s')",
                                 registerMessage.login, registerMessage.password, registerMessage.nickname));
-                        myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
-                        sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
-                        myServer.subscribe(this);
+                        clientName = registerMessage.nickname;
+                        dataMessage.createFile(registerMessage.nickname);
                         dataMessage.addClientToList();
-                        dataMessage.checkMessageFileOnStart();
+                        myServer.subscribe(this);
+                        sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
+                        myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
                     } else {
                         sendMessage("Данный Логин занят! \nПожалуйста, выберите другой Логин!");
                     }
@@ -151,12 +152,9 @@ public class ClientHandler {
     private boolean verifyNick() throws SQLException {
         ResultSet rs = stmt.executeQuery("select * from LoginData");
         while (rs.next()) {
-            ResultSetMetaData dataInBase = rs.getMetaData();
-            for (int i = 1; i <= dataInBase.getColumnCount(); i++) {
-//                if (rs.getString("Nick").equals(changeNick.nick)) {
-                if (rs.getString("Nick").equals(registerMessage.nickname)) {
-                    return false;
-                }
+            // if (rs.getString("Nick").equals(changeNick.nick)) {
+            if (rs.getString("Nick").equals(registerMessage.nickname)) {
+                return false;
             }
         }
         return true;
@@ -165,12 +163,9 @@ public class ClientHandler {
     private boolean verifyLogin() throws SQLException {
         ResultSet rs = stmt.executeQuery("select * from LoginData");
         while (rs.next()) {
-            ResultSetMetaData dataInBase = rs.getMetaData();
-            for (int i = 1; i <= dataInBase.getColumnCount(); i++) {
-//                if (rs.getString("Nick").equals(changeNick.nick)) {
-                if (rs.getString("Login").equals(registerMessage.login)) {
-                    return false;
-                }
+            // if (rs.getString("Nick").equals(changeNick.nick)) {
+            if (rs.getString("Login").equals(registerMessage.login)) {
+                return false;
             }
         }
         return true;

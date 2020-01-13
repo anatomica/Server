@@ -24,13 +24,17 @@ public class BaseAuthService implements AuthService {
 
         ResultSet rs = stmt.executeQuery("select * from LoginData");
         while (rs.next()) {
-            ResultSetMetaData dataInBase = rs.getMetaData();
-            for (int i = 1; i <= dataInBase.getColumnCount(); i++) {
-                if (rs.getString("Login").equals(login) && rs.getString("Pass").equals(pass)) {
-                    String nick = rs.getString("Nick");
-                    stmt.executeUpdate(String.format("UPDATE LoginData SET Token = '%s' WHERE Nick = '%s'", token, nick));
-                    return nick;
-                }
+            if (rs.getString("Token") != null) {
+                if (rs.getString("Token").equals(token))
+                    stmt.executeUpdate(String.format("UPDATE LoginData SET Token = '%s' WHERE Token = '%s'", "", token));
+            }
+        }
+        ResultSet resultSet = stmt.executeQuery("select * from LoginData");
+        while (resultSet.next()) {
+            if (resultSet.getString("Login").equals(login) && resultSet.getString("Pass").equals(pass)) {
+                String nick = resultSet.getString("Nick");
+                stmt.executeUpdate(String.format("UPDATE LoginData SET Token = '%s' WHERE Nick = '%s'", token, nick));
+                return nick;
             }
         }
         return null;
