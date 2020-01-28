@@ -5,6 +5,7 @@ public class PublicMessage {
 
     public String from;
     public String message;
+    public String nameGroup;
 
     public String toJson() {
         return new Gson().toJson(this);

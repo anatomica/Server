@@ -3,6 +3,8 @@ package Server;
 import Server.auth.AuthService;
 import Server.auth.BaseAuthService;
 import Server.gson.Message;
+import Server.gson.PrivateMessage;
+import Server.gson.PublicMessage;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -12,6 +14,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -92,12 +95,13 @@ class MyServer {
 
     private void broadcastClientsList() {
         List<String> nicknames = new ArrayList<>();
-        nicknames.add("< ДЛЯ ВСЕХ >");
-        for (ClientHandler client : clients) {
-            nicknames.add(client.getClientName());
-        }
-
-        Message message = Message.createClientList(nicknames);
+        nicknames.add("Пользователи группы:");
+//        for (ClientHandler client : clients) {
+//            nicknames.add(client.getClientName());
+//        }
+        Collections.sort(dataMessage.allClients);
+        nicknames.addAll(dataMessage.allClients);
+        Message  message = Message.createClientList(nicknames);
         broadcastMessage(message.toJson());
     }
 
@@ -128,18 +132,49 @@ class MyServer {
                 client.sendMessage(message);
             }
         }
-        // PushNotifactionHelper.sendPushNotification(filteredClients, message);
         dataMessage.writeMessageToFile(filteredClients, message);
         dataMessage.addClientToList();
     }
 
+    synchronized void groupMessage(String message, String nameGroup, ClientHandler... unfilteredClients) {
+        List<ClientHandler> unfiltered = Arrays.asList(unfilteredClients);
+        List<String> allClientsFromGroup = dataMessage.allClientsFromGroup;
+        List<String> tmp = new ArrayList<>(allClientsFromGroup);
+        for (String allClients : allClientsFromGroup) {
+            for (ClientHandler client : clients) {
+                if (allClients.equals(client.getClientName())) {
+                    if (!unfiltered.contains(client)) {
+                        Message msg = buildGroupMessage(message, nameGroup, " ? ");
+                        client.sendMessage(msg.toJson());
+                        // client.sendMessage(message);
+                    }
+                    tmp.remove(client.getClientName());
+                }
+            }
+        }
+        dataMessage.writeMessageToFile(tmp, message);
+        dataMessage.addClientToGroupList(nameGroup);
+    }
+
     synchronized void privateMessage(String message, String nick, ClientHandler sender) {
+        List<String> client = new ArrayList<>();
         for (int i = 0; i < clients.size(); i++) {
             if (clients.get(i).getClientName().equals(nick)) {
                 clients.get(i).sendMessage(message);
                 return;
             }
         }
-        sender.sendMessage("Сервер: Этот клиент не подключен!");
+        client.add(nick);
+        dataMessage.writeMessageToFile(client, message);
+        // sender.sendMessage("Сервер: Этот клиент не подключен!");
     }
+
+    private Message buildGroupMessage(String message, String nameGroup, String sender) {
+        PublicMessage msg =  new PublicMessage();
+        msg.from = sender;
+        msg.message = message;
+        msg.nameGroup = nameGroup;
+        return Message.createPublic(msg);
+    }
+
 }

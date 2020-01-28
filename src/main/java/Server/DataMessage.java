@@ -17,6 +17,7 @@ public class DataMessage {
     private static Connection conn;
     private static Statement stmt;
     public List<String> allClients = new ArrayList<>();
+    public List<String> allClientsFromGroup = new ArrayList<>();
     public String pathToHistory;
     public File fileHistory;
     public String pathToHistoryWIN;
@@ -53,19 +54,52 @@ public class DataMessage {
         }
     }
 
+    public void addClientToGroup(String nameGroup, String nickname) {
+        try {
+            connection();
+            ResultSet rs = stmt.executeQuery(String.format("select * from '%s'", nameGroup));
+            while (rs.next()) {
+                if (rs.getString("Nick").equals(nickname)) {
+                    disconnect();
+                    return;
+                }
+            }
+            stmt.executeUpdate(String.format("INSERT INTO '%s' (Nick) VALUES ('%s')",
+                    nameGroup, nickname));
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        addClientToGroupList(nameGroup);
+    }
+
+    public void addClientToGroupList(String nameGroup) {
+        try {
+            connection();
+            allClientsFromGroup.clear();
+            ResultSet rs = stmt.executeQuery(String.format("SELECT * FROM '%s'", nameGroup));
+            while (rs.next()) {
+                allClientsFromGroup.add(rs.getString("Nick"));
+            }
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void checkMessageFileOnStart() {
         for (int i = 0; i < allClients.size(); i++) {
             createFile(allClients.get(i));
         }
     }
 
-    public void writeMessageToFile(List<String> filteredClients, String message) {
+    public void writeMessageToFile(List<String> Clients, String message) {
         if (!message.startsWith("{\"clientListMessage\":"))
-            System.out.println(filteredClients + " " + message);
-        for (String filteredClient : filteredClients) {
+            System.out.println(Clients + " " + message);
+        for (String Client : Clients) {
             if (!message.endsWith("лайн!")) {
                 if (!message.startsWith("{\"clientListMessage\":"))
-                    writeToFile(filteredClient, message);
+                    writeToFile(Client, message);
             }
         }
     }

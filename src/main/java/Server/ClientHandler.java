@@ -109,7 +109,10 @@ public class ClientHandler {
                     break;
                 case PUBLIC_MESSAGE:
                     PublicMessage publicMessage = m.publicMessage;
-                    myServer.broadcastMessage(publicMessage.from + ": " + publicMessage.message, this);
+                    dataMessage.addClientToGroup(publicMessage.nameGroup, publicMessage.from);
+                    dataMessage.addClientToGroupList(publicMessage.nameGroup);
+                    // myServer.broadcastMessage(publicMessage.from + ": " + publicMessage.message, this);
+                    myServer.groupMessage(publicMessage.from + ": " + publicMessage.message, publicMessage.nameGroup, this);
                     break;
                 case PRIVATE_MESSAGE:
                     PrivateMessage privateMessage = m.privateMessage;

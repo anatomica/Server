@@ -23,7 +23,7 @@ class FCM {
      @param message which contains actual information.
      *
      */
-
+//    static void send_FCM_Notification(String tokenId, String server_key, String message){
     static void send_FCM_Notification(String tokenId, String server_key, String message){
         try{
             // Create URL instance
@@ -40,20 +40,44 @@ class FCM {
             conn.setRequestProperty("Authorization","key=" + server_key);
             // Specify Message Format
             conn.setRequestProperty("Content-Type","application/json");
-            //Create JSON Object & pass value
-            JSONObject infoJson = new JSONObject();
 
-            infoJson.put("title","Новое сообщение: ");
-            infoJson.put("body", message);
+            JSONArray regId = null;
+            JSONObject objData = null;
+            JSONObject data = null;
+            JSONObject notif = null;
 
-            JSONObject json = new JSONObject();
-            json.put("to", tokenId.trim());
-            json.put("notification", infoJson);
+            regId = new JSONArray();
+            regId.add(tokenId);
 
-            System.out.println("json :" + json.toString());
-            System.out.println("infoJson :" + infoJson.toString());
+            data = new JSONObject();
+            data.put("message", message);
+
+            notif = new JSONObject();
+            notif.put("title", "Непрочитанные сообщения:");
+            notif.put("text", message);
+
+            objData = new JSONObject();
+            objData.put("registration_ids", regId);
+            objData.put("data", data);
+            objData.put("notification", notif);
+
+            System.out.println("json :" +objData.toString());
+
+//            //Create JSON Object & pass value
+//            JSONObject infoJson = new JSONObject();
+//            infoJson.put("title","Новое сообщение: ");
+//            infoJson.put("body", message);
+//
+//            JSONObject json = new JSONObject();
+//            json.put("to", tokenId.trim());
+//            json.put("notification", infoJson);
+//
+//            System.out.println("json :" + json.toString());
+//            System.out.println("infoJson :" + infoJson.toString());
+
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-            wr.write(json.toString());
+
+            wr.write(objData.toString());
             wr.flush();
             int status = 0;
             if (null != conn ){
@@ -112,19 +136,21 @@ class FCM {
             for (int i = 0; i < putIds2.size(); i++) {
                 regId.add(putIds2.get(i));
             }
+
             data = new JSONObject();
             data.put("message", message);
+
             notif = new JSONObject();
-            notif.put("title", "Alankit Universe");
+            notif.put("title", "Непрочитанные сообщения:");
             notif.put("text", message);
 
             objData = new JSONObject();
             objData.put("registration_ids", regId);
             objData.put("data", data);
             objData.put("notification", notif);
-            System.out.println("!_@rj@_group_PASS:>"+ objData.toString());
 
             System.out.println("json :" +objData.toString());
+
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
 
             wr.write(objData.toString());

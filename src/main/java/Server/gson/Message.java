@@ -1,6 +1,8 @@
 package Server.gson;
 
 import com.google.gson.Gson;
+
+import java.util.Collections;
 import java.util.List;
 
 public class Message {
