@@ -2,6 +2,7 @@ package Server.gson;
 public enum Command {
 
     REGISTER_MESSAGE,
+    GROUP_MESSAGE,
     PUBLIC_MESSAGE,
     PRIVATE_MESSAGE,
     AUTH_MESSAGE,

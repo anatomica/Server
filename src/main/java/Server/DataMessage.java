@@ -13,7 +13,6 @@ public class DataMessage {
 
     private static final String server_key = "AAAAbc8j05s:APA91bFtu-FuYUl2BfQ38piqy2mK4GJzPgsQp94mwbhYJFRjFBL6YRN9GFZ6tR0afwLbORmEWAlnSCkvsox3GvdJtjBfcf9AFn8YAEn8V3-tLqn9TzmlsjaLINzBAvvKXmvUSWhDnduw";
     private MyServer myServer;
-    private ClientHandler clientHandler;
     private static Connection conn;
     private static Statement stmt;
     public List<String> allClients = new ArrayList<>();
@@ -25,7 +24,6 @@ public class DataMessage {
 
     public DataMessage (MyServer myServer) {
         this.myServer = myServer;
-        // this.clientHandler = clientHandler;
     }
 
     public void checkPath() {
@@ -54,6 +52,20 @@ public class DataMessage {
         }
     }
 
+    public void addClientToGroupList(String nameGroup) {
+        try {
+            connection();
+            allClientsFromGroup.clear();
+            ResultSet rs = stmt.executeQuery(String.format("SELECT * FROM '%s'", nameGroup));
+            while (rs.next()) {
+                allClientsFromGroup.add(rs.getString("Nick"));
+            }
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void addClientToGroup(String nameGroup, String nickname) {
         try {
             connection();
@@ -73,20 +85,6 @@ public class DataMessage {
         addClientToGroupList(nameGroup);
     }
 
-    public void addClientToGroupList(String nameGroup) {
-        try {
-            connection();
-            allClientsFromGroup.clear();
-            ResultSet rs = stmt.executeQuery(String.format("SELECT * FROM '%s'", nameGroup));
-            while (rs.next()) {
-                allClientsFromGroup.add(rs.getString("Nick"));
-            }
-            disconnect();
-        }  catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void checkMessageFileOnStart() {
         for (int i = 0; i < allClients.size(); i++) {
             createFile(allClients.get(i));
@@ -94,13 +92,9 @@ public class DataMessage {
     }
 
     public void writeMessageToFile(List<String> Clients, String message) {
-        if (!message.startsWith("{\"clientListMessage\":"))
-            System.out.println(Clients + " " + message);
+        System.out.println(Clients + " " + message);
         for (String Client : Clients) {
-            if (!message.endsWith("лайн!")) {
-                if (!message.startsWith("{\"clientListMessage\":"))
-                    writeToFile(Client, message);
-            }
+            writeToFile(Client, message);
         }
     }
 

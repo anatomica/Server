@@ -23,7 +23,7 @@ class FCM {
      @param message which contains actual information.
      *
      */
-//    static void send_FCM_Notification(String tokenId, String server_key, String message){
+
     static void send_FCM_Notification(String tokenId, String server_key, String message){
         try{
             // Create URL instance

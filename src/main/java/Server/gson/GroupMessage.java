@@ -1,17 +1,18 @@
 package Server.gson;
 import com.google.gson.Gson;
 
-public class PublicMessage {
+public class GroupMessage {
 
     public String from;
     public String message;
+    public String nameGroup;
 
     public String toJson() {
         return new Gson().toJson(this);
     }
 
-    public static PublicMessage fromJson(String json) {
-        return new Gson().fromJson(json, PublicMessage.class);
+    public static GroupMessage fromJson(String json) {
+        return new Gson().fromJson(json, GroupMessage.class);
     }
 
 }

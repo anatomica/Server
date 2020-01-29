@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 public class ClientHandler {
 
     private DataMessage dataMessage;
+    private DataBase dataBase;
     private MyServer myServer;
     private String clientName;
     private Socket socket;
@@ -26,10 +27,11 @@ public class ClientHandler {
     private static Statement stmt;
     public static Logger logger = Logger.getLogger("file");
 
-    ClientHandler(Socket socket, MyServer myServer, DataMessage dataMessage) {
+    ClientHandler(Socket socket, MyServer myServer, DataMessage dataMessage, DataBase dataBase) {
         try {
             this.socket = socket;
             this.myServer = myServer;
+            this.dataBase = dataBase;
             this.dataMessage = dataMessage;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
@@ -43,7 +45,7 @@ public class ClientHandler {
                         }
                     }
                     readMessages();
-                } catch (IOException | SQLException e) {
+                } catch (IOException | SQLException | ClassNotFoundException e) {
                     e.printStackTrace();
                 } finally {
                     closeConnection();
@@ -55,7 +57,20 @@ public class ClientHandler {
         }
     }
 
-    private void readMessages() throws IOException, SQLException {
+    String getClientName() {
+        return clientName;
+    }
+
+    void sendMessage(String message)  {
+        try {
+            out.writeUTF(message);
+        } catch (IOException e) {
+            System.err.println("Ошибка отправки сообщения пользователю: " + clientName + " : " + message);
+            e.printStackTrace();
+        }
+    }
+
+    private void readMessages() throws IOException, SQLException, ClassNotFoundException {
         while (true) {
             String clientMessage = null;
             if (in != null) clientMessage = in.readUTF();
@@ -65,63 +80,62 @@ public class ClientHandler {
             switch (m.command) {
                 case CHANGE_NICK:
                     changeNick = m.changeNick;
-
-                    try {
-                        connection();
-                    }  catch (SQLException | ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-
-                    if (verifyNick()) {
-                        stmt.executeUpdate(String.format("UPDATE LoginData SET Nick = '%s' WHERE Nick = '%s'",
-                                changeNick.nick, clientName));
-                        myServer.broadcastMessage(clientName + " сменил(а) ник, теперь он(а): " + changeNick.nick);
-                        myServer.unsubscribe(this);
-                        clientName = changeNick.nick;
-                        myServer.subscribe(this);
-                    } else {
-                        sendMessage("Данный Ник занят! \nПожалуйста, выберите другой Ник!");
-                    }
-                    disconnect();
+                    changeNick();
                     break;
                 case REGISTER_MESSAGE:
                     registerMessage = m.registerMessage;
-
-                    try {
-                        connection();
-                    }  catch (SQLException | ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-
-                    if (verifyLogin() && verifyNick()) {
-                        stmt.executeUpdate(String.format("INSERT INTO LoginData (Login, Pass, Nick) VALUES ('%s', '%s','%s')",
-                                registerMessage.login, registerMessage.password, registerMessage.nickname));
-                        clientName = registerMessage.nickname;
-                        dataMessage.createFile(registerMessage.nickname);
-                        dataMessage.addClientToList();
-                        myServer.subscribe(this);
-                        sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
-                        myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
-                    } else {
-                        sendMessage("Данный Логин занят! \nПожалуйста, выберите другой Логин!");
-                    }
-                    disconnect();
+                    registerMessage();
+                    break;
+                case GROUP_MESSAGE:
+                    GroupMessage groupMessage = m.groupMessage;
+                    dataMessage.addClientToGroup(groupMessage.nameGroup, groupMessage.from);
+                    dataMessage.addClientToGroupList(groupMessage.nameGroup);
+                    myServer.groupMessage(groupMessage.message, groupMessage.nameGroup, this);
                     break;
                 case PUBLIC_MESSAGE:
                     PublicMessage publicMessage = m.publicMessage;
-                    dataMessage.addClientToGroup(publicMessage.nameGroup, publicMessage.from);
-                    dataMessage.addClientToGroupList(publicMessage.nameGroup);
-                    // myServer.broadcastMessage(publicMessage.from + ": " + publicMessage.message, this);
-                    myServer.groupMessage(publicMessage.from + ": " + publicMessage.message, publicMessage.nameGroup, this);
+                    myServer.broadcastMessage(publicMessage.message, this);
                     break;
                 case PRIVATE_MESSAGE:
                     PrivateMessage privateMessage = m.privateMessage;
-                    myServer.privateMessage(privateMessage.from + " [private]: " + privateMessage.message, privateMessage.to, ClientHandler.this);
+                    myServer.privateMessage(privateMessage.message, privateMessage.to, ClientHandler.this);
                     break;
                 case END:
                     return;
             }
         }
+    }
+
+    private void registerMessage() throws SQLException, ClassNotFoundException {
+            connection();
+        if (verifyLogin() && verifyNick()) {
+            stmt.executeUpdate(String.format("INSERT INTO LoginData (Login, Pass, Nick) VALUES ('%s', '%s','%s')",
+                    registerMessage.login, registerMessage.password, registerMessage.nickname));
+            clientName = registerMessage.nickname;
+            dataMessage.createFile(registerMessage.nickname);
+            dataMessage.addClientToList();
+            myServer.subscribe(this);
+            sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
+            myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
+        } else {
+            sendMessage("Данный Логин занят! \nПожалуйста, выберите другой Логин!");
+        }
+        disconnect();
+    }
+
+    private void changeNick() throws SQLException, ClassNotFoundException {
+        connection();
+        if (verifyNick()) {
+            stmt.executeUpdate(String.format("UPDATE LoginData SET Nick = '%s' WHERE Nick = '%s'",
+                    changeNick.nick, clientName));
+            myServer.broadcastMessage(clientName + " сменил(а) ник, теперь он(а): " + changeNick.nick);
+            myServer.unsubscribe(this);
+            clientName = changeNick.nick;
+            myServer.subscribe(this);
+        } else {
+            sendMessage("Данный Ник занят! \nПожалуйста, выберите другой Ник!");
+        }
+        disconnect();
     }
 
     private boolean authentication() throws IOException, SQLException {
@@ -145,7 +159,7 @@ public class ClientHandler {
             }
             sendMessage("/authok " + nick);
             clientName = nick;
-            myServer.broadcastMessage(clientName + " онлайн!");
+            // myServer.broadcastMessage(clientName + " онлайн!");
             myServer.subscribe(this);
             logger.info("Подключился клиент: " + clientName);
         }
@@ -174,19 +188,6 @@ public class ClientHandler {
         return true;
     }
 
-    void sendMessage(String message)  {
-        try {
-            out.writeUTF(message);
-        } catch (IOException e) {
-            System.err.println("Ошибка отправки сообщения пользователю: " + clientName + " : " + message);
-            e.printStackTrace();
-        }
-    }
-
-    String getClientName() {
-        return clientName;
-    }
-
     private static void connection() throws ClassNotFoundException, SQLException {
         try {
             URI uri = BaseAuthService.class.getProtectionDomain().getCodeSource().getLocation().toURI();
@@ -207,7 +208,7 @@ public class ClientHandler {
     private void closeConnection() {
         myServer.unsubscribe(this);
         if (clientName != null)
-            myServer.broadcastMessage(clientName + " офлайн!");
+            // myServer.broadcastMessage(clientName + " офлайн!");
         try {
             socket.close();
         } catch (IOException e) {
