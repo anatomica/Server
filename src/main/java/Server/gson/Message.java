@@ -16,10 +16,11 @@ public class Message {
     public ChangeNick changeNick;
     public Command command;
 
-    public static Message createClientList(List<String> nicknames) {
+    public static Message createClientList(List<String> nicknames, String from) {
         Message message = create(Command.CLIENT_LIST);
         ClientListMessage msg = new ClientListMessage();
         msg.online = nicknames;
+        msg.from = from;
         message.clientListMessage = msg;
         return message;
     }

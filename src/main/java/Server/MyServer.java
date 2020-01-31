@@ -55,7 +55,19 @@ class MyServer {
 //        }
         Collections.sort(dataMessage.allClients);
         nicknames.addAll(dataMessage.allClients);
-        Message msg = Message.createClientList(nicknames);
+        Message msg = Message.createClientList(nicknames, "");
+        for (ClientHandler client : clients) {
+            client.sendMessage(msg.toJson());
+        }
+    }
+
+    public void sendClientsList(String nameGroup, String toNick) {
+        List<String> nicknames = new ArrayList<>();
+        nicknames.add("Пользователи группы:");
+        dataMessage.addClientToGroupList(nameGroup);
+        Collections.sort(dataMessage.allClientsFromGroup);
+        nicknames.addAll(dataMessage.allClientsFromGroup);
+        Message msg = Message.createClientList(nicknames, toNick);
         for (ClientHandler client : clients) {
             client.sendMessage(msg.toJson());
         }

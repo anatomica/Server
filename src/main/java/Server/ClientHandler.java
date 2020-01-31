@@ -9,6 +9,8 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -78,6 +80,12 @@ public class ClientHandler {
             System.out.printf("Сообщение: '%s' от клиента: %s%n", clientMessage, clientName);
             Message m = Message.fromJson(clientMessage);
             switch (m.command) {
+                case CLIENT_LIST:
+                    ClientListMessage clientListMessage = m.clientListMessage;
+                    String nameGroup = clientListMessage.online.get(0);
+                    String from = clientListMessage.from;
+                    myServer.sendClientsList(nameGroup, from);
+                    break;
                 case CHANGE_NICK:
                     changeNick = m.changeNick;
                     changeNick();
