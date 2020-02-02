@@ -86,6 +86,16 @@ public class ClientHandler {
                     String from = clientListMessage.from;
                     myServer.sendClientsList(nameGroup, from);
                     break;
+                case WORK_WITH_GROUP:
+                    WorkWithGroup workWithGroup = m.workWithGroup;
+                    if (workWithGroup.identify.equals("1")) {
+                        if (!dataBase.checkExistGroup(workWithGroup, ClientHandler.this))
+                            dataBase.createGroup(workWithGroup, ClientHandler.this);
+                    }
+                    if (workWithGroup.identify.equals("0")) {
+
+                    }
+                    break;
                 case CHANGE_NICK:
                     changeNick = m.changeNick;
                     changeNick();
@@ -165,7 +175,7 @@ public class ClientHandler {
                 sendMessage("Учетная запись уже используется!");
                 return false;
             }
-            sendMessage("/authok " + nick);
+            sendMessage("/authOk " + nick);
             clientName = nick;
             // myServer.broadcastMessage(clientName + " онлайн!");
             myServer.subscribe(this);
