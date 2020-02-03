@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 public class WorkWithGroup {
 
     public String identify;
-    public String trueOrFalse;
+    public String password;
     public String nameGroup;
 
     public String toJson() {

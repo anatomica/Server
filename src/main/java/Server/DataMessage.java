@@ -66,25 +66,6 @@ public class DataMessage {
         }
     }
 
-    public void addClientToGroup(String nameGroup, String nickname) {
-        try {
-            connection();
-            ResultSet rs = stmt.executeQuery(String.format("select * from '%s'", nameGroup));
-            while (rs.next()) {
-                if (rs.getString("Nick").equals(nickname)) {
-                    disconnect();
-                    return;
-                }
-            }
-            stmt.executeUpdate(String.format("INSERT INTO '%s' (Nick) VALUES ('%s')",
-                    nameGroup, nickname));
-            disconnect();
-        }  catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        addClientToGroupList(nameGroup);
-    }
-
     public void checkMessageFileOnStart() {
         for (int i = 0; i < allClients.size(); i++) {
             createFile(allClients.get(i));

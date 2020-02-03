@@ -21,7 +21,7 @@ class MyServer {
     private static final int PORT = 8189;
     private final AuthService authService = new BaseAuthService();
     private DataMessage dataMessage = new DataMessage(this);
-    private DataBase dataBase = new DataBase(this);
+    private DataBase dataBase = new DataBase(this, dataMessage);
     public List<ClientHandler> clients = new ArrayList<>();
     private ServerSocket serverSocket = null;
 

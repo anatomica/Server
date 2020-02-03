@@ -25,6 +25,12 @@ class FCM {
      */
 
     static void send_FCM_Notification(String tokenId, String server_key, String message){
+        if (message.startsWith("0")) {
+            StringBuilder stringBuilder = new StringBuilder(message);
+            stringBuilder.delete(0, 1);
+            message = stringBuilder.toString();
+        }
+
         try{
             // Create URL instance
             URL url = new URL(FCM_URL);

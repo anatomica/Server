@@ -12,10 +12,12 @@ import java.sql.*;
 public class DataBase {
 
     private MyServer myServer;
+    private DataMessage dataMessage;
     private static Connection conn;
     private static Statement stmt;
 
-    public DataBase(MyServer myServer) {
+    public DataBase(MyServer myServer, DataMessage dataMessage) {
+        this.dataMessage = dataMessage;
         this.myServer = myServer;
     }
 
@@ -25,7 +27,7 @@ public class DataBase {
             ResultSet rs = stmt.executeQuery("select * from sqlite_master");
             while (rs.next()) {
                 if (rs.getString("name").equals(workWithGroup.nameGroup)) {
-                    toClient.sendMessage("Группа с данным именем существует!");
+                    if (workWithGroup.identify.equals("1")) toClient.sendMessage("Группа с данным именем существует!");
                     disconnect();
                     return true;
                 }
@@ -40,7 +42,7 @@ public class DataBase {
     void createGroup(WorkWithGroup workWithGroup, ClientHandler toClient) throws SQLException {
         try {
             connection();
-            stmt.execute(String.format("create table if not exists %s (\n" +
+            stmt.execute(String.format("create table if not exists '%s' (\n" +
                     "\t id integer not null \n" +
                     "\t constraint \"%s_pk\" \n" +
                     "\t primary key autoincrement, \n" +
@@ -53,6 +55,60 @@ public class DataBase {
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public void addClientToGroup(String nameGroup, String nickname) {
+        try {
+            connection();
+            ResultSet rs = stmt.executeQuery(String.format("select * from '%s'", nameGroup));
+            while (rs.next()) {
+                if (rs.getString("Nick").equals(nickname)) {
+                    disconnect();
+                    return;
+                }
+            }
+            stmt.executeUpdate(String.format("INSERT INTO '%s' (Nick) VALUES ('%s')",
+                    nameGroup, nickname));
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        dataMessage.addClientToGroupList(nameGroup);
+    }
+
+    void deleteClientFromGroup(WorkWithGroup workWithGroup, ClientHandler toClient) {
+        try {
+            connection();
+            stmt.executeQuery(String.format("SELECT * FROM '%s'", workWithGroup.nameGroup));
+            stmt.executeUpdate(String.format("DELETE FROM '%s' WHERE Nick = '%s'",
+                    workWithGroup.nameGroup, toClient.getClientName()));
+            if (workWithGroup.identify.equals("0")) toClient.sendMessage("Вы отписаны от рассылки из данной группы!");
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean checkPassGroup(WorkWithGroup workWithGroup, ClientHandler toClient) {
+        try {
+            connection();
+            ResultSet resultSet = stmt.executeQuery("select * from PassGroup");
+            while (resultSet.next()) {
+                if (resultSet.getString("NameGroup").equals(workWithGroup.nameGroup) &&
+                        resultSet.getString("PassGroup").equals(workWithGroup.password)) {
+                    Message msg = buildWorkWithGroup(workWithGroup.nameGroup, "2");
+                    toClient.sendMessage(msg.toJson());
+                    disconnect();
+                    return true;
+                }
+            }
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        Message msg = buildWorkWithGroup(workWithGroup.nameGroup, "3");
+        toClient.sendMessage(msg.toJson());
+        return false;
     }
 
     private Message buildWorkWithGroup(String nameGroup, String identify) {

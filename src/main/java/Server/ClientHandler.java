@@ -3,14 +3,11 @@ package Server;
 import Server.auth.BaseAuthService;
 import Server.gson.*;
 import org.apache.log4j.Logger;
-
 import java.io.*;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -88,12 +85,17 @@ public class ClientHandler {
                     break;
                 case WORK_WITH_GROUP:
                     WorkWithGroup workWithGroup = m.workWithGroup;
+                    if (workWithGroup.identify.equals("2")) {
+                        if (!dataBase.checkPassGroup(workWithGroup, ClientHandler.this))
+                            sendMessage("Неверный пароль!");
+                    }
                     if (workWithGroup.identify.equals("1")) {
                         if (!dataBase.checkExistGroup(workWithGroup, ClientHandler.this))
                             dataBase.createGroup(workWithGroup, ClientHandler.this);
                     }
                     if (workWithGroup.identify.equals("0")) {
-
+                        if (dataBase.checkExistGroup(workWithGroup, ClientHandler.this))
+                            dataBase.deleteClientFromGroup(workWithGroup, ClientHandler.this);
                     }
                     break;
                 case CHANGE_NICK:
@@ -106,7 +108,7 @@ public class ClientHandler {
                     break;
                 case GROUP_MESSAGE:
                     GroupMessage groupMessage = m.groupMessage;
-                    dataMessage.addClientToGroup(groupMessage.nameGroup, groupMessage.from);
+                    dataBase.addClientToGroup(groupMessage.nameGroup, groupMessage.from);
                     dataMessage.addClientToGroupList(groupMessage.nameGroup);
                     myServer.groupMessage(groupMessage.message, groupMessage.nameGroup, this);
                     break;
