@@ -85,17 +85,23 @@ public class ClientHandler {
                     break;
                 case WORK_WITH_GROUP:
                     WorkWithGroup workWithGroup = m.workWithGroup;
+                    if (workWithGroup.identify.equals("0")) {
+                        if (dataBase.checkExistGroup(workWithGroup, ClientHandler.this))
+                            dataBase.deleteClientFromGroup(workWithGroup, ClientHandler.this);
+                    }
+                    if (workWithGroup.identify.equals("1")) {
+                        if (!dataBase.checkExistGroup(workWithGroup, ClientHandler.this)) {
+                            dataBase.createGroup(workWithGroup, ClientHandler.this);
+                            dataBase.createPassForGroup(workWithGroup, ClientHandler.this);
+                        }
+                    }
                     if (workWithGroup.identify.equals("2")) {
                         if (!dataBase.checkPassGroup(workWithGroup, ClientHandler.this))
                             sendMessage("Неверный пароль!");
                     }
-                    if (workWithGroup.identify.equals("1")) {
-                        if (!dataBase.checkExistGroup(workWithGroup, ClientHandler.this))
-                            dataBase.createGroup(workWithGroup, ClientHandler.this);
-                    }
-                    if (workWithGroup.identify.equals("0")) {
+                    if (workWithGroup.identify.equals("4")) {
                         if (dataBase.checkExistGroup(workWithGroup, ClientHandler.this))
-                            dataBase.deleteClientFromGroup(workWithGroup, ClientHandler.this);
+                            dataBase.joinToGroup(workWithGroup, ClientHandler.this);
                     }
                     break;
                 case CHANGE_NICK:

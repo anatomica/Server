@@ -89,6 +89,25 @@ public class DataBase {
         }
     }
 
+    public void createPassForGroup(WorkWithGroup workWithGroup, ClientHandler toClient) {
+        try {
+            connection();
+            ResultSet resultSet = stmt.executeQuery("select * from PassGroup");
+            while (resultSet.next()) {
+                if (resultSet.getString("NameGroup").equals(workWithGroup.nameGroup)) {
+                    disconnect();
+                    return;
+                }
+            }
+            stmt.executeUpdate(String.format("INSERT INTO PassGroup (NameGroup, PassGroup) VALUES ('%s', '%s')",
+                    workWithGroup.nameGroup, workWithGroup.password));
+            toClient.sendMessage("Пароль задан!");
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     public boolean checkPassGroup(WorkWithGroup workWithGroup, ClientHandler toClient) {
         try {
             connection();
@@ -109,6 +128,11 @@ public class DataBase {
         Message msg = buildWorkWithGroup(workWithGroup.nameGroup, "3");
         toClient.sendMessage(msg.toJson());
         return false;
+    }
+
+    public void joinToGroup(WorkWithGroup workWithGroup, ClientHandler toClient) {
+        Message msg = buildWorkWithGroup(workWithGroup.nameGroup, "1");
+        toClient.sendMessage(msg.toJson());
     }
 
     private Message buildWorkWithGroup(String nameGroup, String identify) {
