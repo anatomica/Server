@@ -142,7 +142,7 @@ public class ClientHandler {
             dataMessage.addClientToList();
             myServer.subscribe(this);
             sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
-            myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
+            // myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
         } else {
             sendMessage("Данный Логин занят! \nПожалуйста, выберите другой Логин!");
         }
