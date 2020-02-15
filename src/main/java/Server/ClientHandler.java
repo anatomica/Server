@@ -124,7 +124,7 @@ public class ClientHandler {
                     break;
                 case PRIVATE_MESSAGE:
                     PrivateMessage privateMessage = m.privateMessage;
-                    myServer.privateMessage(privateMessage.message, privateMessage.to, ClientHandler.this);
+                    myServer.privateMessage(privateMessage.message, privateMessage.to, ClientHandler.this.getClientName());
                     break;
                 case END:
                     return;
@@ -140,9 +140,9 @@ public class ClientHandler {
             clientName = registerMessage.nickname;
             dataMessage.createFile(registerMessage.nickname);
             dataMessage.addClientToList();
-            myServer.subscribe(this);
+            // myServer.subscribe(this);
             sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
-            // myServer.broadcastMessage(registerMessage.nickname + " зарегистрировался в Чате!");
+            myServer.privateMessage(registerMessage.nickname + " зарегистрировался в Чате!", "Макс", "Сервер");
         } else {
             sendMessage("Данный Логин занят! \nПожалуйста, выберите другой Логин!");
         }
@@ -151,13 +151,14 @@ public class ClientHandler {
 
     private void changeNick() throws SQLException, ClassNotFoundException {
         connection();
-        if (verifyNick()) {
+        if (verifyNickOnChange()) {
             stmt.executeUpdate(String.format("UPDATE LoginData SET Nick = '%s' WHERE Nick = '%s'",
                     changeNick.nick, clientName));
-            myServer.broadcastMessage(clientName + " сменил(а) ник, теперь он(а): " + changeNick.nick);
+            myServer.privateMessage(clientName + " сменил(а) имя, его(её) новый ник: " + changeNick.nick, "Макс", "Сервер");
             myServer.unsubscribe(this);
             clientName = changeNick.nick;
             myServer.subscribe(this);
+            sendMessage("Вы успешно сменили Ник на: " + clientName);
         } else {
             sendMessage("Данный Ник занят! \nПожалуйста, выберите другой Ник!");
         }
@@ -197,6 +198,16 @@ public class ClientHandler {
         while (rs.next()) {
             // if (rs.getString("Nick").equals(changeNick.nick)) {
             if (rs.getString("Nick").equals(registerMessage.nickname)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean verifyNickOnChange() throws SQLException {
+        ResultSet rs = stmt.executeQuery("select * from LoginData");
+        while (rs.next()) {
+            if (rs.getString("Nick").equals(changeNick.nick)) {
                 return false;
             }
         }

@@ -50,12 +50,20 @@ class MyServer {
     private void broadcastClientsList() {
         List<String> nicknames = new ArrayList<>();
         nicknames.add("Пользователи группы:");
-//        for (ClientHandler client : clients) {
-//            nicknames.add(client.getClientName());
-//        }
         Collections.sort(dataMessage.allClients);
         nicknames.addAll(dataMessage.allClients);
-        Message msg = Message.createClientList(nicknames, "");
+        Message msg = Message.createClientList(nicknames, "Сервер");
+        for (ClientHandler client : clients) {
+            client.sendMessage(msg.toJson());
+        }
+    }
+
+    private void broadcastClientsListOnline() {
+        List<String> nicknames = new ArrayList<>();
+        for (ClientHandler client : clients) {
+            nicknames.add(client.getClientName());
+        }
+        Message msg = Message.createClientList(nicknames, "Сервер");
         for (ClientHandler client : clients) {
             client.sendMessage(msg.toJson());
         }
@@ -75,7 +83,7 @@ class MyServer {
 
     synchronized void subscribe(ClientHandler clientHandler) {
         clients.add(clientHandler);
-        broadcastClientsList();
+        broadcastClientsListOnline();
         try {
             TimeUnit.SECONDS.sleep(1);
         } catch (InterruptedException e) {
@@ -86,7 +94,7 @@ class MyServer {
 
     synchronized void unsubscribe(ClientHandler clientHandler) {
         clients.remove(clientHandler);
-        broadcastClientsList();
+        broadcastClientsListOnline();
     }
 
     AuthService getAuthService() {
@@ -102,17 +110,17 @@ class MyServer {
         return false;
     }
 
-    synchronized void privateMessage(String message, String nick, ClientHandler sender) {
+    synchronized void privateMessage(String message, String nick, String sender) {
         List<String> client = new ArrayList<>();
         for (ClientHandler clientHandler : clients) {
             if (clientHandler.getClientName().equals(nick)) {
-                Message msg = buildPrivateMessage(message, nick, sender.getClientName());
+                Message msg = buildPrivateMessage(message, nick, sender);
                 clientHandler.sendMessage(msg.toJson());
                 return;
             }
         }
         client.add(nick);
-        dataMessage.writeMessageToFile(client, "0 " + sender.getClientName() + " : " + message);
+        dataMessage.writeMessageToFile(client, "0 " + sender + " : " + message);
         // sender.sendMessage("Сервер: Этот клиент не подключен!");
     }
 
