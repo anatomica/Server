@@ -58,7 +58,8 @@ public class DataMessage {
             allClientsFromGroup.clear();
             ResultSet rs = stmt.executeQuery(String.format("SELECT * FROM '%s'", nameGroup));
             while (rs.next()) {
-                allClientsFromGroup.add(rs.getString("Nick"));
+                String Nick = getNick(rs.getString("Login"));
+                allClientsFromGroup.add(Nick);
             }
             disconnect();
         }  catch (SQLException | ClassNotFoundException e) {
@@ -92,9 +93,9 @@ public class DataMessage {
 
     public void createFile(String nameClient) {
         try {
-            fileHistory = new File(pathToHistoryLINUX + nickToID(nameClient) + ".txt");
-            if (fileHistory.createNewFile()) System.out.println("Файл истории " + nameClient + " номер: " + nickToID(nameClient) + " создан!");
-            else System.out.println("Файл истории " + nameClient + " номер: " + nickToID(nameClient) + " ранее создан и найден!");
+            fileHistory = new File(pathToHistoryLINUX + getID(nameClient) + ".txt");
+            if (fileHistory.createNewFile()) System.out.println("Файл истории " + nameClient + " номер: " + getID(nameClient) + " создан!");
+            else System.out.println("Файл истории " + nameClient + " номер: " + getID(nameClient) + " ранее создан и найден!");
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -102,14 +103,14 @@ public class DataMessage {
 
     public void cleanFile(String nameClient) {
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(pathToHistoryLINUX + nickToID(nameClient) + ".txt", false), "UTF-8"))) {
+                new FileOutputStream(pathToHistoryLINUX + getID(nameClient) + ".txt", false), "UTF-8"))) {
             bw.write("");
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    public String nickToID(String nick){
+    public String getID(String nick){
         String ID = null;
         try {
             connection();
@@ -120,6 +121,32 @@ public class DataMessage {
             e.printStackTrace();
         }
         return ID;
+    }
+
+    public String getNick(String login){
+        String Nick = null;
+        try {
+            connection();
+            ResultSet rs = stmt.executeQuery(String.format("SELECT Nick from LoginData where Login = '%s'", login));
+            Nick = rs.getString("Nick");
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return Nick;
+    }
+
+    public String getLogin(String nick){
+        String Login = null;
+        try {
+            connection();
+            ResultSet rs = stmt.executeQuery(String.format("SELECT Login from LoginData where Nick = '%s'", nick));
+            Login = rs.getString("Login");
+            disconnect();
+        }  catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return Login;
     }
 
     public String getToken(String nick){

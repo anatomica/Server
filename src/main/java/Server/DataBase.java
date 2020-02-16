@@ -46,7 +46,7 @@ public class DataBase {
                     "\t id integer not null \n" +
                     "\t constraint \"%s_pk\" \n" +
                     "\t primary key autoincrement, \n" +
-                    "\t Nick text \n" +
+                    "\t Login text \n" +
                     ");", workWithGroup.nameGroup, workWithGroup.nameGroup));
             toClient.sendMessage("Группа успешно создана!");
             Message msg = buildWorkWithGroup(workWithGroup.nameGroup, "1");
@@ -60,15 +60,16 @@ public class DataBase {
     public void addClientToGroup(String nameGroup, String nickname) {
         try {
             connection();
+            String Login = dataMessage.getLogin(nickname);
             ResultSet rs = stmt.executeQuery(String.format("select * from '%s'", nameGroup));
             while (rs.next()) {
-                if (rs.getString("Nick").equals(nickname)) {
+                if (rs.getString("Login").equals(Login)) {
                     disconnect();
                     return;
                 }
             }
-            stmt.executeUpdate(String.format("INSERT INTO '%s' (Nick) VALUES ('%s')",
-                    nameGroup, nickname));
+            stmt.executeUpdate(String.format("INSERT INTO '%s' (Login) VALUES ('%s')",
+                    nameGroup, Login));
             disconnect();
         }  catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -79,9 +80,10 @@ public class DataBase {
     void deleteClientFromGroup(WorkWithGroup workWithGroup, ClientHandler toClient) {
         try {
             connection();
+            String Login = dataMessage.getLogin(toClient.getClientName());
             stmt.executeQuery(String.format("SELECT * FROM '%s'", workWithGroup.nameGroup));
-            stmt.executeUpdate(String.format("DELETE FROM '%s' WHERE Nick = '%s'",
-                    workWithGroup.nameGroup, toClient.getClientName()));
+            stmt.executeUpdate(String.format("DELETE FROM '%s' WHERE Login = '%s'",
+                    workWithGroup.nameGroup, Login));
             if (workWithGroup.identify.equals("0")) toClient.sendMessage("Вы отписаны от рассылки из данной группы!");
             disconnect();
         }  catch (SQLException | ClassNotFoundException e) {

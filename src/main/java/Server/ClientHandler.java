@@ -81,7 +81,11 @@ public class ClientHandler {
                     ClientListMessage clientListMessage = m.clientListMessage;
                     String nameGroup = clientListMessage.online.get(0);
                     String from = clientListMessage.from;
-                    myServer.sendClientsList(nameGroup, from);
+                    if (from.equals("Request")) {
+                        myServer.broadcastClientsListOnline();
+                        break;
+                    }
+                    else myServer.sendClientsList(nameGroup, from);
                     break;
                 case WORK_WITH_GROUP:
                     WorkWithGroup workWithGroup = m.workWithGroup;
@@ -124,7 +128,7 @@ public class ClientHandler {
                     break;
                 case PRIVATE_MESSAGE:
                     PrivateMessage privateMessage = m.privateMessage;
-                    myServer.privateMessage(privateMessage.message, privateMessage.to, ClientHandler.this.getClientName());
+                    myServer.privateMessage(privateMessage.message, privateMessage.to, ClientHandler.this);
                     break;
                 case END:
                     return;
@@ -142,7 +146,7 @@ public class ClientHandler {
             dataMessage.addClientToList();
             // myServer.subscribe(this);
             sendMessage("Вы зарегистрированы!\nОсуществляется выход!\nПожалуйста, войдите в\nприложение заного!");
-            myServer.privateMessage(registerMessage.nickname + " зарегистрировался в Чате!", "Макс", "Сервер");
+            myServer.privateMessage(registerMessage.nickname + " зарегистрировался в Чате!");
         } else {
             sendMessage("Данный Логин занят! \nПожалуйста, выберите другой Логин!");
         }
@@ -154,11 +158,11 @@ public class ClientHandler {
         if (verifyNickOnChange()) {
             stmt.executeUpdate(String.format("UPDATE LoginData SET Nick = '%s' WHERE Nick = '%s'",
                     changeNick.nick, clientName));
-            myServer.privateMessage(clientName + " сменил(а) имя, его(её) новый ник: " + changeNick.nick, "Макс", "Сервер");
+            myServer.privateMessage(clientName + " сменил(а) имя, его(её) новый ник: " + changeNick.nick);
             myServer.unsubscribe(this);
             clientName = changeNick.nick;
             myServer.subscribe(this);
-            sendMessage("Вы успешно сменили Ник на: " + clientName);
+            sendMessage("Вы успешно сменили Ник на: " + clientName + " ! Осуществляется выход. Войдите в приложение заного!");
         } else {
             sendMessage("Данный Ник занят! \nПожалуйста, выберите другой Ник!");
         }
@@ -193,10 +197,19 @@ public class ClientHandler {
         return true;
     }
 
+    private boolean verifyLogin() throws SQLException {
+        ResultSet rs = stmt.executeQuery("select * from LoginData");
+        while (rs.next()) {
+            if (rs.getString("Login").equals(registerMessage.login)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean verifyNick() throws SQLException {
         ResultSet rs = stmt.executeQuery("select * from LoginData");
         while (rs.next()) {
-            // if (rs.getString("Nick").equals(changeNick.nick)) {
             if (rs.getString("Nick").equals(registerMessage.nickname)) {
                 return false;
             }
@@ -208,17 +221,6 @@ public class ClientHandler {
         ResultSet rs = stmt.executeQuery("select * from LoginData");
         while (rs.next()) {
             if (rs.getString("Nick").equals(changeNick.nick)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean verifyLogin() throws SQLException {
-        ResultSet rs = stmt.executeQuery("select * from LoginData");
-        while (rs.next()) {
-            // if (rs.getString("Nick").equals(changeNick.nick)) {
-            if (rs.getString("Login").equals(registerMessage.login)) {
                 return false;
             }
         }

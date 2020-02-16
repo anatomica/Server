@@ -58,7 +58,7 @@ class MyServer {
         }
     }
 
-    private void broadcastClientsListOnline() {
+    public void broadcastClientsListOnline() {
         List<String> nicknames = new ArrayList<>();
         for (ClientHandler client : clients) {
             nicknames.add(client.getClientName());
@@ -110,18 +110,31 @@ class MyServer {
         return false;
     }
 
-    synchronized void privateMessage(String message, String nick, String sender) {
+    synchronized void privateMessage(String message, String nick, ClientHandler sender) {
         List<String> client = new ArrayList<>();
         for (ClientHandler clientHandler : clients) {
             if (clientHandler.getClientName().equals(nick)) {
-                Message msg = buildPrivateMessage(message, nick, sender);
+                Message msg = buildPrivateMessage(message, nick, sender.getClientName());
                 clientHandler.sendMessage(msg.toJson());
                 return;
             }
         }
         client.add(nick);
-        dataMessage.writeMessageToFile(client, "0 " + sender + " : " + message);
-        // sender.sendMessage("Сервер: Этот клиент не подключен!");
+        if (dataMessage.getID(nick) == null) sender.sendMessage("Сервер: Этот клиент не зарегистрирован!");
+        else dataMessage.writeMessageToFile(client, "0 " + sender.getClientName() + " : " + message);
+    }
+
+    synchronized void privateMessage(String message) {
+        List<String> client = new ArrayList<>();
+        for (ClientHandler clientHandler : clients) {
+            if (clientHandler.getClientName().equals("Макс")) {
+                Message msg = buildPrivateMessage(message, "Макс", "Сервер");
+                clientHandler.sendMessage(msg.toJson());
+                return;
+            }
+        }
+        client.add("Макс");
+        dataMessage.writeMessageToFile(client, "0 " + "Сервер" + " : " + message);
     }
 
     String sender;
@@ -164,7 +177,7 @@ class MyServer {
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(
                     new FileInputStream(dataMessage.pathToHistoryLINUX +
-                            dataMessage.nickToID(clientHandler.getClientName()) + ".txt"), "UTF-8"));
+                            dataMessage.getID(clientHandler.getClientName()) + ".txt"), "UTF-8"));
             String tmp;
             String group = null;
             String name = null;
