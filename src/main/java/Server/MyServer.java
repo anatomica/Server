@@ -178,22 +178,27 @@ class MyServer {
             BufferedReader br = new BufferedReader(new InputStreamReader(
                     new FileInputStream(dataMessage.pathToHistoryLINUX +
                             dataMessage.getID(clientHandler.getClientName()) + ".txt"), "UTF-8"));
+            int regexIsNumber = 0;
             String tmp;
-            String group = null;
-            String name = null;
-            String message = null;
+            String group = "";
+            String name;
+            String regex = ":";
+            String message;
             int count = 0;
             while ((tmp = br.readLine()) != null) {
-                if (tmp.split("\\s+").length > 3) {
-                    group = tmp.split("\\s+")[0];
-                    name = tmp.split("\\s+")[1];
-                    message = tmp.split("\\s+", 4)[3];
+                for (int i = 0; i < tmp.split("\\s+").length; i++) {
+                    if (regex.equals(tmp.split("\\s+")[i])) {
+                        regexIsNumber = i;
+                        break;
+                    }
                 }
-                if (tmp.split("\\s+").length <= 3) {
-                    group = tmp.split("\\s+")[0];
-                    name = tmp.split("\\s+")[1];
-                    message = tmp.split("\\s+", 3)[2];
+                for (int i = 0; i < regexIsNumber - 1; i++) {
+                    group += tmp.split("\\s+")[i];
+                    if (i == regexIsNumber - 2) break;
+                    else group += " ";
                 }
+                name = tmp.split("\\s+")[regexIsNumber - 1];
+                message = tmp.split("\\s+", regexIsNumber + 2)[regexIsNumber + 1];
                 if (count == 0) {
                     clientHandler.sendMessage("Новые сообщения от " + name);
                     count++;
