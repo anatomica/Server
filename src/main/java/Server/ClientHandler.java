@@ -64,7 +64,7 @@ public class ClientHandler {
         try {
             out.writeUTF(message);
         } catch (IOException e) {
-            System.err.println("Ошибка отправки сообщения пользователю: " + clientName + " : " + message);
+            logger.error("Ошибка отправки сообщения пользователю: " + clientName + " : " + message);
             e.printStackTrace();
         }
     }
@@ -73,8 +73,7 @@ public class ClientHandler {
         while (true) {
             String clientMessage = null;
             if (in != null) clientMessage = in.readUTF();
-            logger.info(String.format("Сообщение/команда: '%s' от клиента: %s%n", clientMessage, clientName));
-            System.out.printf("Сообщение: '%s' от клиента: %s%n", clientMessage, clientName);
+            logger.info(String.format("Сообщение/команда: '%s' от клиента: %s", clientMessage, clientName));
             Message m = Message.fromJson(clientMessage);
             switch (m.command) {
                 case CLIENT_LIST:
@@ -120,11 +119,11 @@ public class ClientHandler {
                     GroupMessage groupMessage = m.groupMessage;
                     dataBase.addClientToGroup(groupMessage.nameGroup, groupMessage.from);
                     dataMessage.addClientToGroupList(groupMessage.nameGroup);
-                    myServer.groupMessage(groupMessage.message, groupMessage.nameGroup, this);
+                    myServer.groupMessage(groupMessage.message, groupMessage.nameGroup, ClientHandler.this, this);
                     break;
                 case PUBLIC_MESSAGE:
                     PublicMessage publicMessage = m.publicMessage;
-                    myServer.broadcastMessage(publicMessage.message, this);
+                    myServer.broadcastMessage(publicMessage.message, ClientHandler.this,this);
                     break;
                 case PRIVATE_MESSAGE:
                     PrivateMessage privateMessage = m.privateMessage;
@@ -251,7 +250,7 @@ public class ClientHandler {
         try {
             socket.close();
         } catch (IOException e) {
-            System.err.println("Failed to close socket!");
+            logger.error("Failed to close socket!");
             e.printStackTrace();
         }
     }

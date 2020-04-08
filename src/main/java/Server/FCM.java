@@ -67,7 +67,7 @@ class FCM {
             objData.put("data", data);
             objData.put("notification", notif);
 
-            System.out.println("json :" +objData.toString());
+            ClientHandler.logger.debug("json :" + objData.toString());
 
 //            //Create JSON Object & pass value
 //            JSONObject infoJson = new JSONObject();
@@ -94,24 +94,24 @@ class FCM {
                 if (status == 200 ){
                 // SUCCESS message
                     BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    System.out.println("Android Notification Response : " + reader.readLine());
+                    ClientHandler.logger.debug("Android Notification Response : " + reader.readLine());
                 } else if (status == 401){
                 // client side error
-                    System.out.println("Notification Response : TokenId : " + tokenId + " Error occurred :");
+                    ClientHandler.logger.error("Notification Response : TokenId : " + tokenId + " Error occurred :");
                 } else if (status == 501){
                 // server side error
-                    System.out.println("Notification Response : [ errorCode=ServerError ] TokenId : " + tokenId);
+                    ClientHandler.logger.error("Notification Response : [ errorCode=ServerError ] TokenId : " + tokenId);
                 } else if (status == 503){
                 //server side error
-                    System.out.println("Notification Response : FCM Service is Unavailable TokenId : " + tokenId);
+                    ClientHandler.logger.error("Notification Response : FCM Service is Unavailable TokenId : " + tokenId);
                 }
             }
         } catch (MalformedURLException mlfexception){
         // Prototcal Error
-            System.out.println("Error occurred while sending push Notification!.." + mlfexception.getMessage());
+            ClientHandler.logger.error("Error occurred while sending push Notification!.." + mlfexception.getMessage());
         } catch (Exception mlfexception){
         // URL problem
-            System.out.println("Reading URL, Error occurred while sending push Notification!.." + mlfexception.getMessage());
+            ClientHandler.logger.error("Reading URL, Error occurred while sending push Notification!.." + mlfexception.getMessage());
         }
     }
 
@@ -155,7 +155,7 @@ class FCM {
             objData.put("data", data);
             objData.put("notification", notif);
 
-            System.out.println("json :" +objData.toString());
+            ClientHandler.logger.debug("json :" + objData.toString());
 
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
 
@@ -171,29 +171,29 @@ class FCM {
                     //SUCCESS message
                     BufferedReader reader = new BufferedReader(new
                             InputStreamReader(conn.getInputStream()));
-                    System.out.println("Android Notification Response : " +
+                    ClientHandler.logger.debug("Android Notification Response : " +
                             reader.readLine());
                 }else if(status == 401){
                     //client side error
-                    System.out.println("Notification Response : TokenId : " + tokenId + " Error occurred :");
+                    ClientHandler.logger.error("Notification Response : TokenId : " + tokenId + " Error occurred :");
                 }else if(status == 501){
                     //server side error
-                    System.out.println("Notification Response : [ errorCode=ServerError ] TokenId : " + tokenId);
+                    ClientHandler.logger.error("Notification Response : [ errorCode=ServerError ] TokenId : " + tokenId);
                 }else if( status == 503){
                     //server side error
-                    System.out.println("Notification Response : FCM Service is Unavailable TokenId : " + tokenId);
+                    ClientHandler.logger.error("Notification Response : FCM Service is Unavailable TokenId : " + tokenId);
                 }
             }
         } catch (MalformedURLException mlfexception){
             // Prototcal Error
-            System.out.println("Error occurred while sending push Notification!.." +
+            ClientHandler.logger.error("Error occurred while sending push Notification!.." +
                     mlfexception.getMessage());
         } catch (IOException mlfexception){
             //URL problem
-            System.out.println("Reading URL, Error occurred while sending push Notification!.." + mlfexception.getMessage());
+            ClientHandler.logger.error("Reading URL, Error occurred while sending push Notification!.." + mlfexception.getMessage());
         } catch (Exception exception) {
             //General Error or exception.
-            System.out.println("Error occurred while sending push Notification!.." + exception.getMessage());
+            ClientHandler.logger.error("Error occurred while sending push Notification!.." + exception.getMessage());
         }
     }
 }

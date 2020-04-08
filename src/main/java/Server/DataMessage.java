@@ -34,7 +34,7 @@ public class DataMessage {
             pathToHistoryLINUX = pathToHistory + "/";
             System.out.println(pathToHistory);
         } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
+            ClientHandler.logger.error(e.getMessage());
         }
     }
 
@@ -68,13 +68,12 @@ public class DataMessage {
     }
 
     public void checkMessageFileOnStart() {
-        for (int i = 0; i < allClients.size(); i++) {
-            createFile(allClients.get(i));
+        for (String allClient : allClients) {
+            createFile(allClient);
         }
     }
 
     public void writeMessageToFile(List<String> Clients, String message) {
-        System.out.println(Clients + " " + message);
         for (String Client : Clients) {
             writeToFile(Client, message);
         }

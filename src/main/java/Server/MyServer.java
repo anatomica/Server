@@ -15,6 +15,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 class MyServer {
 
@@ -29,18 +30,18 @@ class MyServer {
         dataMessage.checkPath();
         dataMessage.addClientToList();
         dataMessage.checkMessageFileOnStart();
-        System.out.println("Сервер запущен!");
+        ClientHandler.logger.info("Сервер запущен!");
         try {
             serverSocket = new ServerSocket(PORT);
             authService.start();
             while (true) {
-                System.out.println("Ожидание подключения клиентов ...");
+                ClientHandler.logger.info("Ожидание подключения клиентов ...");
                 Socket socket = serverSocket.accept();
-                System.out.println("Клиент подключен!");
+                ClientHandler.logger.info("Клиент подключен!");
                 new ClientHandler(socket, this, dataMessage, dataBase);
             }
         } catch (IOException e) {
-            System.err.println("Ошибка в работе сервера. Причина: " + e.getMessage());
+            ClientHandler.logger.error("Ошибка в работе сервера. Причина: " + e.getMessage());
             e.printStackTrace();
         } finally {
             shutdownServer();
@@ -110,18 +111,18 @@ class MyServer {
         return false;
     }
 
-    synchronized void privateMessage(String message, String nick, ClientHandler sender) {
+    synchronized void privateMessage(String message, String nick, ClientHandler fromClient) {
         List<String> client = new ArrayList<>();
         for (ClientHandler clientHandler : clients) {
             if (clientHandler.getClientName().equals(nick)) {
-                Message msg = buildPrivateMessage(message, nick, sender.getClientName());
+                Message msg = buildPrivateMessage(message, nick, fromClient.getClientName());
                 clientHandler.sendMessage(msg.toJson());
                 return;
             }
         }
         client.add(nick);
-        if (dataMessage.getID(nick) == null) sender.sendMessage("Сервер: Этот клиент не зарегистрирован!");
-        else dataMessage.writeMessageToFile(client, "0 " + sender.getClientName() + " : " + message);
+        if (dataMessage.getID(nick) == null) fromClient.sendMessage("Сервер: Этот клиент не зарегистрирован!");
+        else dataMessage.writeMessageToFile(client, "0 " + fromClient.getClientName() + " : " + message);
     }
 
     synchronized void privateMessage(String message) {
@@ -137,8 +138,7 @@ class MyServer {
         dataMessage.writeMessageToFile(client, "0 " + "Сервер" + " : " + message);
     }
 
-    String sender;
-    synchronized void groupMessage(String message, String nameGroup, ClientHandler... unfilteredClients) {
+    synchronized void groupMessage(String message, String nameGroup, ClientHandler fromClient, ClientHandler... unfilteredClients) {
         List<ClientHandler> unfiltered = Arrays.asList(unfilteredClients);
         List<String> allClientsFromGroup = dataMessage.allClientsFromGroup;
         List<String> tmpClients = new ArrayList<>(allClientsFromGroup);
@@ -146,30 +146,28 @@ class MyServer {
             for (ClientHandler client : clients) {
                 if (allClients.equals(client.getClientName())) {
                     tmpClients.remove(client.getClientName());
-                    if (unfiltered.contains(client)) sender = client.getClientName();
                     if (!unfiltered.contains(client)) {
-                        Message msg = buildGroupMessage(message, nameGroup, sender);
+                        Message msg = buildGroupMessage(message, nameGroup, fromClient.getClientName());
                         client.sendMessage(msg.toJson());
                     }
                 }
             }
         }
-        dataMessage.writeMessageToFile(tmpClients, nameGroup + " " + sender + " : " + message);
+        dataMessage.writeMessageToFile(tmpClients, nameGroup + " " + fromClient.getClientName() + " : " + message);
         dataMessage.addClientToGroupList(nameGroup);
     }
 
-    synchronized void broadcastMessage(String message, ClientHandler... unfilteredClients) {
+    synchronized void broadcastMessage(String message, ClientHandler fromClient, ClientHandler... unfilteredClients) {
         List<ClientHandler> unfiltered = Arrays.asList(unfilteredClients);
         List<String> allClients = dataMessage.allClients;
         for (ClientHandler client : clients) {
             allClients.remove(client.getClientName());
-            if (unfiltered.contains(client)) sender = client.getClientName();
             if (!unfiltered.contains(client)) {
-                Message msg = buildPublicMessage(message, sender);
+                Message msg = buildPublicMessage(message, fromClient.getClientName());
                 client.sendMessage(msg.toJson());
             }
         }
-        dataMessage.writeMessageToFile(allClients, sender + " : " + message);
+        dataMessage.writeMessageToFile(allClients, fromClient.getClientName() + " : " + message);
         dataMessage.addClientToList();
     }
 
@@ -180,7 +178,7 @@ class MyServer {
                             dataMessage.getID(clientHandler.getClientName()) + ".txt"), "UTF-8"));
             int regexIsNumber = 0;
             String tmp;
-            String group = "";
+            StringBuilder group;
             String name;
             String regex = ":";
             String message;
@@ -192,10 +190,11 @@ class MyServer {
                         break;
                     }
                 }
+                group = new StringBuilder();
                 for (int i = 0; i < regexIsNumber - 1; i++) {
-                    group += tmp.split("\\s+")[i];
+                    group.append(tmp.split("\\s+")[i]);
                     if (i == regexIsNumber - 2) break;
-                    else group += " ";
+                    else group.append(" ");
                 }
                 name = tmp.split("\\s+")[regexIsNumber - 1];
                 message = tmp.split("\\s+", regexIsNumber + 2)[regexIsNumber + 1];
@@ -204,13 +203,14 @@ class MyServer {
                     count++;
                 }
                 TimeUnit.MILLISECONDS.sleep(300);
-                if (Objects.equals(group, "0")) {
+                if (Objects.equals(group.toString(), "0")) {
                     Message msg = buildPrivateMessage(message, clientHandler.getClientName(), name);
                     clientHandler.sendMessage(msg.toJson());
-                    System.out.println("Message: " + message + " To: " + clientHandler.getClientName());
+                    ClientHandler.logger.info("From: " + name + "; Send message from file: " + message + "; To: " + clientHandler.getClientName());
                 } else {
-                    Message msg = buildGroupMessage(message, group, name);
+                    Message msg = buildGroupMessage(message, group.toString(), name);
                     clientHandler.sendMessage(msg.toJson());
+                    ClientHandler.logger.info("From: " + name + "; Send message from file: " + message + "; To Group: " + group.toString());
                 }
             }
             dataMessage.cleanFile(clientHandler.getClientName());
