@@ -152,7 +152,7 @@ public class DataBase {
             conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
             stmt = conn.createStatement();
         } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
+            ClientHandler.logger.error(e.getMessage());
         }
     }
 

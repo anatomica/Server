@@ -2,26 +2,30 @@ package Server;
 
 import Server.auth.AuthService;
 import Server.auth.BaseAuthService;
+import Server.fcm.FirebaseNotificationService;
 import Server.gson.GroupMessage;
 import Server.gson.Message;
 import Server.gson.PrivateMessage;
 import Server.gson.PublicMessage;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 class MyServer {
 
     private static final int PORT = 8189;
     private final AuthService authService = new BaseAuthService();
-    private DataMessage dataMessage = new DataMessage(this);
+    private final FirebaseNotificationService  firebaseService = new FirebaseNotificationService();
+    private final DataMessage dataMessage = new DataMessage(this);
     private DataBase dataBase = new DataBase(this, dataMessage);
     public List<ClientHandler> clients = new ArrayList<>();
     private ServerSocket serverSocket = null;
@@ -30,6 +34,7 @@ class MyServer {
         dataMessage.checkPath();
         dataMessage.addClientToList();
         dataMessage.checkMessageFileOnStart();
+        firebaseService.initializeFirebase();
         ClientHandler.logger.info("Сервер запущен!");
         try {
             serverSocket = new ServerSocket(PORT);

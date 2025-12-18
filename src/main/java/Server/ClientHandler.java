@@ -234,7 +234,7 @@ public class ClientHandler {
             conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
             stmt = conn.createStatement();
         } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage());
         }
     }
 

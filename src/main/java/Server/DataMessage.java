@@ -11,7 +11,6 @@ import java.util.List;
 
 public class DataMessage {
 
-    private static final String server_key = "AAAAbc8j05s:APA91bFtu-FuYUl2BfQ38piqy2mK4GJzPgsQp94mwbhYJFRjFBL6YRN9GFZ6tR0afwLbORmEWAlnSCkvsox3GvdJtjBfcf9AFn8YAEn8V3-tLqn9TzmlsjaLINzBAvvKXmvUSWhDnduw";
     private MyServer myServer;
     private static Connection conn;
     private static Statement stmt;
@@ -32,7 +31,7 @@ public class DataMessage {
             pathToHistory = new File(uri).getParent();
             pathToHistoryWIN = pathToHistory + "\\";
             pathToHistoryLINUX = pathToHistory + "/";
-            System.out.println(pathToHistory);
+            ClientHandler.logger.info("Путь к истории: " + pathToHistory);
         } catch (URISyntaxException e) {
             ClientHandler.logger.error(e.getMessage());
         }
@@ -80,23 +79,26 @@ public class DataMessage {
     }
 
     private void writeToFile(String nameClient, String messageText) {
-        FCM.send_FCM_Notification(getToken(nameClient), server_key, messageText);
+        FCM.send_FCM_Notification(getToken(nameClient), messageText);
         createFile(nameClient);
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(fileHistory, true), "UTF-8"))) {
             bw.write(messageText + "\n");
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            ClientHandler.logger.error(e.getMessage());
         }
     }
 
     public void createFile(String nameClient) {
         try {
             fileHistory = new File(pathToHistoryLINUX + getID(nameClient) + ".txt");
-            if (fileHistory.createNewFile()) System.out.println("Файл истории " + nameClient + " номер: " + getID(nameClient) + " создан!");
-            else System.out.println("Файл истории " + nameClient + " номер: " + getID(nameClient) + " ранее создан и найден!");
+            if (fileHistory.createNewFile()) {
+                ClientHandler.logger.info("Файл истории " + nameClient + " номер: " + getID(nameClient) + " создан!");
+            } else {
+                ClientHandler.logger.info("Файл истории " + nameClient + " номер: " + getID(nameClient) + " ранее создан и найден!");
+            }
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            ClientHandler.logger.error(e.getMessage());
         }
     }
 
@@ -105,7 +107,7 @@ public class DataMessage {
                 new FileOutputStream(pathToHistoryLINUX + getID(nameClient) + ".txt", false), "UTF-8"))) {
             bw.write("");
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            ClientHandler.logger.error(e.getMessage());
         }
     }
 
@@ -169,7 +171,7 @@ public class DataMessage {
             conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDB);
             stmt = conn.createStatement();
         } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
+            ClientHandler.logger.error(e.getMessage());
         }
     }
 
